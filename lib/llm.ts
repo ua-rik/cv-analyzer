@@ -42,14 +42,19 @@ export async function evaluateWithLLM(params: {
 Критерії: ${JSON.stringify(criteria)}
 Резюме: ${resumeText}`;
 
-  const response = await client.responses.create({
+  const response = await client.chat.completions.create({
     model,
-    input: prompt,
-    response_format: { type: 'json_object' }
+    response_format: { type: 'json_object' },
+    messages: [
+      {
+        role: 'system',
+        content: 'Ти експерт з технічного рекрутингу. Відповідай лише валідним JSON.'
+      },
+      { role: 'user', content: prompt }
+    ]
   });
 
-  const content = response.output?.[0]?.content?.[0];
-  const text = content && 'text' in content ? content.text : response.output_text;
+  const text = response.choices?.[0]?.message?.content;
   if (!text) {
     throw new Error('LLM did not return any text');
   }
